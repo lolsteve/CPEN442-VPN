@@ -17,12 +17,3 @@ class server(SocketServer.BaseRequestHandler):
         # just send back the same data, but upper-cased
         self.request.sendall(self.data.upper())
 
-if __name__ == "__main__":
-    address = "localhost", 10008
-
-    # Create the server, binding to localhost on port 9999
-    server = SocketServer.TCPServer(address, server)
-
-    # Activate the server; this will keep running until you
-    # interrupt the program with Ctrl-C
-    server.serve_forever()
