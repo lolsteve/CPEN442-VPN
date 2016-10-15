@@ -35,7 +35,7 @@ def callClient():
     #sharedKey = '1234'
     sharedKey = str(sharedKey)
     #mutual authen
-    mutAuthClient(sharedKey, clientTest)
+    clientTest.mutAuthClient(sharedKey)
     #key excahnge
     #DHkeyClient(clientTest)
     #enter text
@@ -48,49 +48,6 @@ def callClient():
     clientTest.send(dataCl)
     clientTest.close()
 
-def mutAuthClient(sharedKey, clientTest):
-
-    # Create AES object with shared key
-    cipher = AESCipher(sharedKey)
-
-    # Client's challenge to server
-    Ra = Random.new().read(16)
-    message= 'Client'+ Ra
-    print 'msg', message
-    clientTest.send(message)
-
-    # Wait for response from server
-    reply = clientTest.waitToRec()
-    print "got a reply"
-
-    # Decrypt response
-    plainText = cipher.decrypt(reply)
-    print 'plaintext', plainText
-
-    # Obtain Ra and Rb from response
-    RaTest = plainText[-32:-16]
-    print 'Ra', RaTest
-    Rb=plainText[-16:]
-    print 'Rb', Rb
-
-    # Compare received Ra with sent Ra
-    if RaTest!= Ra:
-        print 'mutual Auth failed'
-        clientTest.close()
-        sys.exit(1)
-
-    # Encrypt "name","Rb" with shared key and send it
-    clientTest.send(cipher.encrypt('Client'+ Rb))
-
-    # Wait for response from server
-    replyauth = clientTest.waitToRec()
-    if replyauth == 'mutual auth failed':
-        print 'mutual Auth failed'
-        clientTest.close()
-        sys.exit(1)
-    else:
-        print 'CLIENT: mutual auth passed'
-    return
 
 #def DHkeyClient(clientTest):
 #DH = DiffieHellman()
