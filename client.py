@@ -1,21 +1,33 @@
 import sys
 import socket
 
-address = "localhost", 10008
-data = " ".join(sys.argv[1:])
+class client(object):
 
-# Create a socket (SOCK_STREAM means a TCP socket)
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	def send(self, data):
 
-try:
-    # Connect to server and send data
-    sock.connect(address)
-    sock.sendall(data + "\n")
+		try:
+		    # Connect to server and send data
+		    self.sock.sendall(data + "\n")
+		
+		    # Receive data from the server and shut down
+		    received = self.sock.recv(1024)
+		finally:
+		    self.sock.close()
 
-    # Receive data from the server and shut down
-    received = sock.recv(1024)
-finally:
-    sock.close()
+		print "Sent:     {}".format(data)
+		print "Received: {}".format(received)
 
-print "Sent:     {}".format(data)
-print "Received: {}".format(received)
+	def close(self):
+		self.sock.close()
+
+
+	def __init__(self, address, port):
+		self.address = address, port
+		
+		# Create a socket (SOCK_STREAM means a TCP socket)
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		
+		# Connect to server and send data
+		self.sock.connect(self.address)
+		
+
