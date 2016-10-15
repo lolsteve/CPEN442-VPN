@@ -30,6 +30,7 @@ class client(object):
             self.sock.close()
 
 
+    # Wait to receive
     def waitToRec(self):
         try:
             return self.sock.recv(1024)

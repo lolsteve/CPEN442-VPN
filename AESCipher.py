@@ -10,6 +10,7 @@ class AESCipher(object):
             self.key = key.ljust(32, '0')
 
     def encrypt(self, plain_text):
+        print "lets encrypt the msg"
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         mac = HMAC.new(self.key)
@@ -31,9 +32,9 @@ class AESCipher(object):
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         plain_text = cipher.decrypt(cipher_text[16:-32])
 
-        for i in range(len(plain_text) -1, 0, -1):
-            if plain_text[i+1] != '\x00':
-                plain_text = plain_text[:i]
+        for i in range(len(plain_text)-1, 0, -1):
+            if plain_text[i] != '\x00':
+                plain_text = plain_text[:i+1]
                 break
 
         calc_mac = HMAC.new(self.key)
