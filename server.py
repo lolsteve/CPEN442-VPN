@@ -1,55 +1,49 @@
-import SocketServer
+import socket
+import sys
 from AESCipher import AESCipher
 from Crypto.Random import random
 
-class handler(SocketServer.BaseRequestHandler):
-    """
-    The request handler class for our server.
+class server(object):
 
-    It is instantiated once per connection to the server, and must
-    override the handle() method to implement communication to the
-    client.
-    """
+    def __init__(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sharedKey = ''
 
-    def handle(self):
-        # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
-        if self.data[:6] == 'Client' :
-            mutualAuth()
-        
-        print "{} wrote:".format(self.client_address[0])
-        print self.data
-        # just send back the same data, but upper-cased
-        self.request.sendall(self.data.upper())
-            
-    def __init__(self, request, client_address, server, sharedKey):
-    
+    def serve(self, host, port):
+        address = (host, port)
+        self.sock.bind(address)
+        self.sock.listen(1)
+        while True:
+            try:
+                clientsocket, address = self.sock.accept()
+                data = clientsocket.recv(1024).strip()
+                if data[:6] == 'Client':
+                    self.mutualAuth(clientsocket, data)
+            except:
+                print 'bad'
+                sys.exit(1)
+
+    def setKey(self, sharedKey):
         self.sharedKey = sharedKey
-        SocketServer.BaseRequestHandler.__init__(self, request, client_address, server)
-        return
-  
-    def mutualAuth(self):
-        Ra = self.data[:-16]
+
+    def mutualAuth(self, client, message):
+        print 'msg', message
+        Ra = message[-16:]
+        print 'Ra', Ra
         cipher = AESCipher(self.sharedKey)
-        Rb = random.getrandbits(128)
+        Rb = str(random.getrandbits(128))
+        print 'Rb', Rb
         cipherText = cipher.encrypt('Server'+Ra+Rb)
-        self.request.sendall(cipherText)
-        
+        client.send(cipherText)
+
         cipherText= self.request.recv(1024).strip()
 
         plainText = cipher.decrypt(cipherText)
+        print 'plainText', plainText
         if plainText[-16:] != Rb :
             print 'mutual Auth failed'
-            self.request.sendall('mutual auth failed')
+            client.send('mutual auth failed')
             sys.exit(1)
 
-        self.request.sendall('mutual auth passed')
-        return
-
-
-class server(SocketServer.TCPServer):
-
-    def __init__(self, server_address, handler_class=EchoRequstHandler, sharedKey):
-        self.sharedKey = sharedKey
-        SocketServer.TCPServer.__init__(self, server_address, handler_class)
+        client.send('mutual auth passed')
         return

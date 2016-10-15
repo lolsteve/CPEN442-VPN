@@ -32,7 +32,7 @@ def callClient():
     #mutual authen
     mutAuthClient(sharedKey, clientTest)
     #key excahnge
-    DHkeyClient(clientTest)
+    #DHkeyClient(clientTest)
     #enter text
 
     # Message
@@ -45,14 +45,18 @@ def callClient():
 
 def mutAuthClient(sharedKey, clientTest):
     cipher = AESCipher(sharedKey)
-    Ra = random.getrandbits(128)
+    Ra = str(random.getrandbits(128))
     message= 'Client'+ Ra
+    print 'msg', message
     clientTest.send(message)
     reply = clientTest.waitToRec()
     plainText = cipher.decrypt(reply)
+    print 'plaintext', plainText
     RaTest = plainText[-32:-16]
+    print 'Ra', RaTest
     Rb=plainText[-16:]
-    if RaTest!= Ra :
+    print 'Rb', Rb
+    if RaTest!= Ra:
         print 'mutual Auth failed'
         clientTest.close()
         sys.exit(1)
@@ -74,16 +78,14 @@ def callServer():
     portSv = click.prompt('Please enter a valid port number', type=int)
     # Address
     addressSv = click.prompt('Please enter an address; default is', default='localhost')
-        
 
     #shared key
     sharedKey = click.prompt('Please enter a shared key')
-    
-    tupleSv = addressSv, portSv
-    serverSv = SocketServer.TCPServer(tupleSv, server, sharedKey)
-    serverSv.serve_forever()
-    
+
+    serverSv = server()
+    serverSv.setKey(sharedKey)
+    serverSv.serve(addressSv, portSv)
 
 if __name__ == "__main__":
    main()
-    
+
