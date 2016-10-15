@@ -1,44 +1,89 @@
 import click
 import SocketServer
+import sys
 from server import server
 from client import client
+from AESCipher import AESCipher
+from Crypto.Random import random
+from DiffieHellman import DiffieHellman
 
 @click.command()
 @click.option('--mode', prompt=True, type=click.Choice(['server', 'client']))
 
 
 def main(mode):
-	click.echo('Running in %s mode.' % mode)
+    click.echo('Running in %s mode.' % mode)
 
-	if mode == 'server':
-		callServer()
-	else:
-		callClient()
+    if mode == 'server':
+        callServer()
+    else:
+        callClient()
 
 def callClient():
-	# Port
-	portCl = click.prompt('Please enter a valid port number', type=int)
-	# Address
-	addressCl = click.prompt('Please enter an address; default is', default='localhost')
-	# Message
-	dataCl = click.prompt('Please enter message to be sent')
+    # Port
+    portCl = click.prompt('Please enter a valid port number', type=int)
+    # Address
+    addressCl = click.prompt('Please enter an address; default is', default='localhost')
+       # Send data from client to server
+    clientTest = client(addressCl, portCl)
 
-	# Send data from client to server
-	clientTest = client(addressCl, portCl)
-	clientTest.send(dataCl)
-	clientTest.close()
+    #shared key
+    sharedKey = click.prompt('Please enter a shared key')
+    #mutual authen
+    mutAuthClient(sharedKey, clientTest)
+    #key excahnge
+    DHkeyClient(clientTest)
+    #enter text
+
+    # Message
+    dataCl = click.prompt('Please enter message to be sent')
+
+    # Send data from client to server
+    #clientTest = client(addressCl, portCl)
+    clientTest.send(dataCl)
+    clientTest.close()
+
+def mutAuthClient(sharedKey, clientTest):
+    cipher = AESCipher(sharedKey)
+    Ra = random.getrandbits(128)
+    message= 'Client'+ Ra
+    clientTest.send(message)
+    reply = clientTest.waitToRec()
+    plainText = cipher.decrypt(reply)
+    RaTest = plainText[-32:-16]
+    Rb=plainText[-16:]
+    if RaTest!= Ra :
+        print 'mutual Auth failed'
+        clientTest.close()
+        sys.exit(1)
+    clientTest.send(cipher.encrypt('Client'+ Rb))
+    replyauth = clientTest.waitToRec()
+    if replyauth == 'mutual auth failed':
+        print 'mutual Auth failed'
+        clientTest.close()
+        sys.exit(1)
+    return
+
+#def DHkeyClient(clientTest):
+#DH = DiffieHellman()
+
+
 
 def callServer():
-	# Port
-	portSv = click.prompt('Please enter a valid port number', type=int)
-	# Address
-	addressSv = click.prompt('Please enter an address; default is', default='localhost')
+    # Port
+    portSv = click.prompt('Please enter a valid port number', type=int)
+    # Address
+    addressSv = click.prompt('Please enter an address; default is', default='localhost')
+        
 
-	tupleSv = addressSv, portSv
-	serverSv = SocketServer.TCPServer(tupleSv, server)
-	serverSv.serve_forever()
-	
+    #shared key
+    sharedKey = click.prompt('Please enter a shared key')
+    
+    tupleSv = addressSv, portSv
+    serverSv = SocketServer.TCPServer(tupleSv, server, sharedKey)
+    serverSv.serve_forever()
+    
 
 if __name__ == "__main__":
    main()
-	
+    
