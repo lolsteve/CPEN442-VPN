@@ -34,21 +34,58 @@ class client(object):
 
     # Wait to receive
     def waitToRec(self):
-        try:
+        #wait on socket to get data
+	try:
             return self.sock.recv(1024)
         except:
             self.sock.close()
 
+    #key exchange for client
     def DH(self):
+
+	#generate key to send to server
 	myDiffieHellman = DiffieHellman()
-	print myDiffieHellman.public_key
+	print 'Key sent to server: ',myDiffieHellman.public_key
+	
+	#send key to server
 	self.send(str(myDiffieHellman.public_key))
 	reply= self.waitToRec()
-	print 'got client'
-	print reply
+	print 'got client key: ', reply
+	
+	#calculate session key
 	myDiffieHellman.calc_shared_key(long(reply))
 	print "sessionKey: ", myDiffieHellman.key
 	self.sessionKey = myDiffieHellman.key
+
+    def sendMessage(self):
+	#generate cipher for session
+	sessionCipher = AESCipher(str(self.sessionKey))
+	while True:
+	    try:
+		#prompt client for message
+                dataCl = raw_input('Please enter a message to be sent: ')
+		
+		#encrypt message
+		cipherText = sessionCipher.encrypt(dataCl)
+		print 'The encrypted client message is: ', cipherText
+		
+		#send message to server
+		print 'sending ciphertext'
+		self.send(cipherText)
+		
+		#wait to hear back from server
+		print 'waiting for message'
+		reply = self.waitToRec()
+		print 'The encrypted cipherText', reply
+		
+		#decrypt message gotten from server
+		plainText = sessionCipher.decrypt(reply)
+		print 'Server plaintext: ', plainText
+
+	    except:
+                self.close()
+		return
+
 
     def mutAuthClient(self, sharedKey):
 

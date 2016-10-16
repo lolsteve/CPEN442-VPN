@@ -13,22 +13,30 @@ class server(object):
     def serve(self, host, port):
         address = (host, port)
         self.sock.bind(address)
-        self.sock.listen(1)
+        #only 1 listener on socket
+	self.sock.listen(1)
         while True:
             try:
-                clientsocket, address = self.sock.accept()
-                data = clientsocket.recv(1024).strip()
-                if data[:6] == 'Client':
+                #get client socket
+		clientsocket, address = self.sock.accept()
+                #listen to recieve data
+		data = clientsocket.recv(1024).strip()
+                #when client is sent start Mut Auth, Key exchange
+		if data[:6] == 'Client':
                     self.mutualAuth(clientsocket, data)
-                    self.DH(clientsocket)
+                    #key exchange
+		    self.DH(clientsocket)
+		    #exchange messages with client
                     self.talk_to_it(clientsocket)
             except:
                 print 'bad'
                 sys.exit(1)
 
+    #set the key for encryption
     def setKey(self, sharedKey):
         self.sharedKey = sharedKey
 
+    #mutual Auth
     def mutualAuth(self, client, message):
 
         # Receive request for authentication from client
@@ -68,6 +76,7 @@ class server(object):
         client.send('mutual auth passed')
         return
 
+    #server key exchange
     def DH(self, client):
         myDH = DiffieHellman()
 
@@ -87,16 +96,22 @@ class server(object):
 
         self.sessionKey = myDH.key
 
+    #send and recieve messages from client
     def talk_to_it(self, client):
-        sessionCipher = AESCipher(str(self.sessionKey))
-        while True:
+        #establish cipher used in this session
+	sessionCipher = AESCipher(str(self.sessionKey))
+	while True:
             try:
-                #print 'waiting for message'
+		#get message from client
                 cipherText = client.recv(1024).strip()
-                plainText = sessionCipher.decrypt(cipherText)
-                print 'Client', plainText
+                print 'the encrypted message from the client is: ', cipherText
+		#decrypt the cipherText
+		plainText = sessionCipher.decrypt(cipherText)
+                print 'Client message:', plainText
+		#prompt server for message, encrypt and send to client
                 reply = raw_input('Please enter a message to be sent')
                 message = sessionCipher.encrypt(reply)
                 client.send(message)
+		
             except:
-                client.close()
+		client.close()

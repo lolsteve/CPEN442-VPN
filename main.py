@@ -23,62 +23,42 @@ def main(mode):
 def callClient():
     # Port
     portCl = click.prompt('Please enter a valid port number', type=int)
-    #portCl = 1234
     # Address
     addressCl = click.prompt('Please enter an address; default is', default='localhost')
-    #addressCl = 'localhost'
-       # Send data from client to server
+    
+    # create new client
     clientTest = client(addressCl, portCl)
 
     #shared key
     sharedKey = click.prompt('Please enter a shared key', type=str)
-    #sharedKey = '1234'
     sharedKey = str(sharedKey)
+    
     #mutual authen
     clientTest.mutAuthClient(sharedKey)
     #key excahnge
-    #DHkeyClient(clientTest)
     clientTest.DH()
-    #enter text
 
     # Message
-    sessionCipher = AESCipher(str(clientTest.sessionKey))
-    while True:
-        try:
-            dataCl = click.prompt('Please enter message to be sent', type=str)
-            dataCl = str(dataCl)
-            print dataCl
-            cipherText = sessionCipher.encrypt(dataCl)
-            print 'sending cipher', cipherText
-            clientTest.send(cipherText)
-            reply = clientTest.waitToRec()
-            plainText = sessionCipher.decrypt(reply)
-            print 'Server', plainText
-        except KeyboardInterrupt:
-            pass
-        except:
-            clientTest.close()
-            return
+    clientTest.sendMessage()
 
-
-    # Send data from client to server
-    #clientTest = client(addressCl, portCl)
     clientTest.close()
 
 def callServer():
     # Port
     portSv = click.prompt('Please enter a valid port number', type=int)
-    #portSv = 1234
+    
     # Address
     addressSv = click.prompt('Please enter an address; default is', default='0.0.0.0')
+    
     #addressSv = 'localhost'
 
     #shared key
     sharedKey = click.prompt('Please enter a shared key', type=str)
-    #sharedKey = '1234'
     sharedKey = str(sharedKey)
 
+    #create new server
     serverSv = server()
+    #set mut auth key
     serverSv.setKey(sharedKey)
     serverSv.serve(addressSv, portSv)
 
