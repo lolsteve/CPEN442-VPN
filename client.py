@@ -1,5 +1,6 @@
 import sys
 import socket
+from DiffieHellman import DiffieHellman
 from AESCipher import AESCipher
 from Crypto import Random
 
@@ -40,11 +41,14 @@ class client(object):
 
     def DH(self):
 	myDiffieHellman = DiffieHellman()
-	self.send(myDiffieHellman.public_key)
+	print myDiffieHellman.public_key
+	self.send(str(myDiffieHellman.public_key))
 	reply= self.waitToRec()
 	print 'got client'
-	self.sessionKey = myDiffieHellman.calc_shared_key(reply)
-	print "sessionKey: ", self.sessionKey
+	print reply
+	myDiffieHellman.calc_shared_key(long(reply))
+	print "sessionKey: ", myDiffieHellman.key
+	self.sessionKey = myDiffieHellman.key
 	return
 
     def mutAuthClient(self, sharedKey):

@@ -1,5 +1,6 @@
 import socket
 import sys
+from DiffieHellman import DiffieHellman
 from AESCipher import AESCipher
 from Crypto import Random
 
@@ -19,7 +20,7 @@ class server(object):
                 data = clientsocket.recv(1024).strip()
                 if data[:6] == 'Client':
                     self.mutualAuth(clientsocket, data)
-                    self.DH
+                    self.DH(clientsocket)
             except:
                 print 'bad'
                 sys.exit(1)
@@ -66,19 +67,21 @@ class server(object):
         client.send('mutual auth passed')
         return
 
-    def DH(self):
+    def DH(self, client):
         myDH = DiffieHellman()
 
         print 'waiting for value from clinet'
         # Receive value from client
         publicVal = client.recv(1024).strip()
-
+        print publicVal
         print 'sending computed dh value to client'
         # Send computed DH to client
-        client.send(myDH.public_key)
+        client.send(str(myDH.public_key))
 
         print 'getting session key'
         # Compute shared key
-        self.sessionKey = myDH.calc_shared_key(publicVal) 
+        myDH.calc_shared_key(long(publicVal)) 
 
-        print sessionKey
+        print myDH.key
+
+        self.sessionKey = myDiffieHellman.key
