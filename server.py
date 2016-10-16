@@ -19,6 +19,7 @@ class server(object):
                 data = clientsocket.recv(1024).strip()
                 if data[:6] == 'Client':
                     self.mutualAuth(clientsocket, data)
+                    self.DH
             except:
                 print 'bad'
                 sys.exit(1)
@@ -64,3 +65,20 @@ class server(object):
         # Tell client we're good to go
         client.send('mutual auth passed')
         return
+
+    def DH(self):
+        myDH = DiffieHellman()
+
+        print 'waiting for value from clinet'
+        # Receive value from client
+        publicVal = client.recv(1024).strip()
+
+        print 'sending computed dh value to client'
+        # Send computed DH to client
+        client.send(myDH.public_key)
+
+        print 'getting session key'
+        # Compute shared key
+        self.sessionKey = myDH.calc_shared_key(publicVal) 
+
+        print sessionKey
