@@ -70,7 +70,7 @@ def callServer():
     portSv = click.prompt('Please enter a valid port number', type=int)
     #portSv = 1234
     # Address
-    addressSv = click.prompt('Please enter an address; default is', default='localhost')
+    addressSv = click.prompt('Please enter an address; default is', default='0.0.0.0')
     #addressSv = 'localhost'
 
     #shared key
