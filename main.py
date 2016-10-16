@@ -38,6 +38,7 @@ def callClient():
     clientTest.mutAuthClient(sharedKey)
     #key excahnge
     #DHkeyClient(clientTest)
+    clientTest.DH()
     #enter text
 
     # Message
