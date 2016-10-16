@@ -18,7 +18,8 @@ class client(object):
         self.sock.close()
 
     def __init__(self, address, port):
-        self.address = address, port
+        self.sessionKey = ""
+	self.address = address, port
 
         # Create a socket (SOCK_STREAM means a TCP socket)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,6 +37,15 @@ class client(object):
             return self.sock.recv(1024)
         except:
             self.sock.close()
+
+    def DH(self):
+	myDiffieHellman = DiffieHellman()
+	self.send(myDiffieHellman.public_key)
+	reply= self.waitToRec()
+	print 'got client'
+	self.sessionKey = myDiffieHellman.calc_shared_key(reply)
+	print "sessionKey: ", self.sessionKey
+	return
 
     def mutAuthClient(self, sharedKey):
 
