@@ -21,18 +21,18 @@ def main(mode):
         callClient()
 
 def callClient():
+    # Address
+    addressCl = click.prompt('Please enter an address to connect to; default is', default='localhost')
     # Port
     portCl = click.prompt('Please enter a valid port number', type=int)
-    # Address
-    addressCl = click.prompt('Please enter an address; default is', default='localhost')
-    
+
     # create new client
     clientTest = client(addressCl, portCl)
 
     #shared key
     sharedKey = click.prompt('Please enter a shared key', type=str)
     sharedKey = str(sharedKey)
-    
+
     #mutual authen
     clientTest.mutAuthClient(sharedKey)
     #key excahnge
@@ -44,13 +44,10 @@ def callClient():
     clientTest.close()
 
 def callServer():
+    # Address
+    addressSv = click.prompt('Please enter an address to listen on; default is', default='0.0.0.0')
     # Port
     portSv = click.prompt('Please enter a valid port number', type=int)
-    
-    # Address
-    addressSv = click.prompt('Please enter an address; default is', default='0.0.0.0')
-    
-    #addressSv = 'localhost'
 
     #shared key
     sharedKey = click.prompt('Please enter a shared key', type=str)
