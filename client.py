@@ -85,50 +85,54 @@ class client(object):
 
 
     def mutAuthClient(self, sharedKey):
+        try:
+            # Create AES object with shared key
+            cipher = AESCipher(sharedKey)
 
-        # Create AES object with shared key
-        cipher = AESCipher(sharedKey)
+            # Client's challenge to server
+            Ra = Random.new().read(16)
+            print 'Ra:', Ra.encode('hex')
+            message= 'Client'+ Ra
+            print 'Sending message:', message
+            self.send(message)
 
-        # Client's challenge to server
-        Ra = Random.new().read(16)
-        print 'Ra:', Ra.encode('hex')
-        message= 'Client'+ Ra
-        print 'Sending message:', message
-        self.send(message)
+            # Wait for response from server
+            reply = self.waitToRec()
+            print 'Received:', reply.encode('hex')
 
-        # Wait for response from server
-        reply = self.waitToRec()
-        print 'Received:', reply.encode('hex')
+            # Decrypt response
+            plainText = cipher.decrypt(reply)
+            print 'Decrypted:', plainText
 
-        # Decrypt response
-        plainText = cipher.decrypt(reply)
-        print 'Decrypted:', plainText
+            # Obtain Ra and Rb from response
+            RaTest = plainText[-32:-16]
+            print 'Ra received:', RaTest.encode('hex')
+            Rb=plainText[-16:]
+            print 'Rb received:', Rb.encode('hex')
 
-        # Obtain Ra and Rb from response
-        RaTest = plainText[-32:-16]
-        print 'Ra received:', RaTest.encode('hex')
-        Rb=plainText[-16:]
-        print 'Rb received:', Rb.encode('hex')
+            # Compare received Ra with sent Ra
+            if RaTest!= Ra:
+                print 'Different Ra received: mutual auth failed'
+                self.close()
+                sys.exit(1)
 
-        # Compare received Ra with sent Ra
-        if RaTest!= Ra:
-            print 'Different Ra received: mutual auth failed'
+            # Encrypt "name","Rb" with shared key and send it
+            finalReply = 'Client' + Rb
+            print 'Encrypting reply:', finalReply
+            finalCipher = cipher.encrypt(finalReply)
+            print 'Sending cipher:', finalCipher.encode('hex')
+            self.send(finalCipher)
+
+            # Wait for response from server
+            replyauth = self.waitToRec()
+            if replyauth == 'mutual auth failed':
+                print 'Server denied authentication: mutual auth failed'
+                self.close()
+                sys.exit(1)
+            else:
+                print 'CLIENT: mutual auth passed'
+        except:
+            print 'Mutual auth failed'
             self.close()
             sys.exit(1)
-
-        # Encrypt "name","Rb" with shared key and send it
-        finalReply = 'Client' + Rb
-        print 'Encrypting reply:', finalReply
-        finalCipher = cipher.encrypt(finalReply)
-        print 'Sending cipher:', finalCipher.encode('hex')
-        self.send(finalCipher)
-
-        # Wait for response from server
-        replyauth = self.waitToRec()
-        if replyauth == 'mutual auth failed':
-            print 'Server denied authentication: mutual auth failed'
-            self.close()
-            sys.exit(1)
-        else:
-            print 'CLIENT: mutual auth passed'
 

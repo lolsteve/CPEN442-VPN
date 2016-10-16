@@ -28,10 +28,15 @@ class server(object):
                     self.DH(clientsocket)
                     #exchange messages with client
                     self.talk_to_it(clientsocket)
+            except KeyboardInterrupt:
+                print 'Exiting'
+                clientsocket.close()
+                self.sock.close()
+                sys.exit(1)
             except:
                 print 'Connection closed'
                 clientsocket.close()
-                sys.exit(1)
+                #sys.exit(1)
 
     #set the key for encryption
     def setKey(self, sharedKey):
@@ -39,43 +44,46 @@ class server(object):
 
     #mutual Auth
     def mutualAuth(self, client, message):
+        try:
+            # Receive request for authentication from client
+            print 'Received:', message.encode('hex')
+            Ra = message[-16:]
+            print 'Ra:', Ra.encode('hex')
 
-        # Receive request for authentication from client
-        print 'Received:', message.encode('hex')
-        Ra = message[-16:]
-        print 'Ra:', Ra.encode('hex')
+            # Create AES object with shared key
+            cipher = AESCipher(self.sharedKey)
 
-        # Create AES object with shared key
-        cipher = AESCipher(self.sharedKey)
+            # Server's challenge to client
+            Rb = Random.new().read(16)
+            print 'Rb:', Rb.encode('hex')
 
-        # Server's challenge to client
-        Rb = Random.new().read(16)
-        print 'Rb:', Rb.encode('hex')
+            # Encrypt "name","Ra","Rb" with shared key and send it
+            reply = 'Server'+Ra+Rb
+            #print 'Encrypting reply:', reply
+            cipherText = cipher.encrypt(reply)
+            print 'Sending cipher:', cipherText.encode('hex')
+            client.send(cipherText)
 
-        # Encrypt "name","Ra","Rb" with shared key and send it
-        reply = 'Server'+Ra+Rb
-        #print 'Encrypting reply:', reply
-        cipherText = cipher.encrypt(reply)
-        print 'Sending cipher:', cipherText.encode('hex')
-        client.send(cipherText)
+            # Get response from client and decrypt
+            cipherText = client.recv(1024).strip()
+            print 'Received:', cipherText.encode('hex')
+            plainText = cipher.decrypt(cipherText)
+            print 'Decrypted:', plainText
 
-        # Get response from client and decrypt
-        cipherText = client.recv(1024).strip()
-        print 'Received:', cipherText.encode('hex')
-        plainText = cipher.decrypt(cipherText)
-        print 'Decrypted:', plainText
+            # Compare received Rb with sent Rb
+            if plainText[-16:] != Rb :
+                print 'Different Rb received: mutual auth failed'
+                client.send('mutual auth failed')
+                sys.exit(1)
+            else:
+                print 'SERVER: mutual auth passed'
 
-        # Compare received Rb with sent Rb
-        if plainText[-16:] != Rb :
-            print 'Different Rb received: mutual auth failed'
-            client.send('mutual auth failed')
-            sys.exit(1)
-        else:
-            print 'SERVER: mutual auth passed'
-
-        # Tell client we're good to go
-        client.send('mutual auth passed')
-        return
+            # Tell client we're good to go
+            client.send('mutual auth passed')
+            return
+        except:
+            print 'Mutual auth failed'
+            client.close()
 
     #server key exchange
     def DH(self, client):
