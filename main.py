@@ -42,18 +42,28 @@ def callClient():
     #enter text
 
     # Message
-    dataCl = click.prompt('Please enter message to be sent')
+    sessionCipher = AESCipher(str(clientTest.sessionKey))
+    while True:
+        try:
+            dataCl = click.prompt('Please enter message to be sent', type=str)
+            dataCl = str(dataCl)
+            print dataCl
+            cipherText = sessionCipher.encrypt(dataCl)
+            print 'sending cipher', cipherText
+            clientTest.send(cipherText)
+            reply = clientTest.waitToRec()
+            plainText = sessionCipher.decrypt(reply)
+            print 'Server', plainText
+        except KeyboardInterrupt:
+            pass
+        except:
+            clientTest.close()
+            return
+
 
     # Send data from client to server
     #clientTest = client(addressCl, portCl)
-    clientTest.send(dataCl)
     clientTest.close()
-
-
-#def DHkeyClient(clientTest):
-#DH = DiffieHellman()
-
-
 
 def callServer():
     # Port

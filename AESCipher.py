@@ -10,7 +10,6 @@ class AESCipher(object):
             self.key = key.ljust(32, '0')
 
     def encrypt(self, plain_text):
-        print "lets encrypt the msg"
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         mac = HMAC.new(self.key)

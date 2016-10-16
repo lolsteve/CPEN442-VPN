@@ -21,6 +21,7 @@ class server(object):
                 if data[:6] == 'Client':
                     self.mutualAuth(clientsocket, data)
                     self.DH(clientsocket)
+                    self.talk_to_it(clientsocket)
             except:
                 print 'bad'
                 sys.exit(1)
@@ -85,3 +86,17 @@ class server(object):
         print myDH.key
 
         self.sessionKey = myDH.key
+
+    def talk_to_it(self, client):
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                #print 'waiting for message'
+                cipherText = client.recv(1024).strip()
+                plainText = sessionCipher.decrypt(cipherText)
+                print 'Client', plainText
+                reply = raw_input('Please enter a message to be sent')
+                message = sessionCipher.encrypt(reply)
+                client.send(message)
+            except:
+                client.close()
