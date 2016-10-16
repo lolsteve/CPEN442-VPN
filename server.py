@@ -80,8 +80,8 @@ class server(object):
 
         print 'getting session key'
         # Compute shared key
-        myDH.calc_shared_key(long(publicVal)) 
+        myDH.calc_shared_key(long(publicVal))
 
         print myDH.key
 
-        self.sessionKey = myDiffieHellman.key
+        self.sessionKey = myDH.key

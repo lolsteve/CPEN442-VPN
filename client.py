@@ -49,7 +49,6 @@ class client(object):
 	myDiffieHellman.calc_shared_key(long(reply))
 	print "sessionKey: ", myDiffieHellman.key
 	self.sessionKey = myDiffieHellman.key
-	return
 
     def mutAuthClient(self, sharedKey):
 
