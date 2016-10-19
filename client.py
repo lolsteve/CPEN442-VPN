@@ -70,19 +70,37 @@ class client(object):
                 #send message to server
                 self.send(cipherText)
 
-                #wait to hear back from server
-                print 'Waiting for reply'
-                reply = self.waitToRec()
-                print 'Encrypted message received', reply.encode('hex')
-
-                #decrypt message gotten from server
-                plainText = sessionCipher.decrypt(reply)
-                print 'Decrypted message:', plainText
+#                #wait to hear back from server
+#                print 'Waiting for reply'
+ #               reply = self.waitToRec()
+  #              print 'Encrypted message received', reply.encode('hex')
+#
+ #               #decrypt message gotten from server
+  #              plainText = sessionCipher.decrypt(reply)
+   #             print 'Decrypted message:', plainText
+#
             except:
                 print 'Connection closed'
                 self.close()
                 return
 
+
+    def waitForMessage(self):
+	sessionCipher = AESCipher(str(self.sessionKey))
+	print 'Waiting for message'
+	while True:
+	    try:
+		#reply = self.waitToRec()
+		reply = self.sock.recv(1024).strip()
+		print 'Encrypted message received', reply.encode('hex')
+
+		#decrypt message gotten from server
+                plainText = sessionCipher.decrypt(reply)
+                print 'Decrypted message:', plainText
+	    except:
+		print 'Connection closed'
+                self.close()
+                return
 
     def mutAuthClient(self, sharedKey):
         try:

@@ -1,5 +1,6 @@
 import socket
 import sys
+import threading
 from DiffieHellman import DiffieHellman
 from AESCipher import AESCipher
 from Crypto import Random
@@ -9,8 +10,45 @@ class server(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sharedKey = ''
+	self.clientSock = ''
+
+    def serverRecv(self):
+        print "server recv"
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                #get message from client
+                print 'Waiting for reply'
+                cipherText = self.clientSock.recv(1024).strip()
+                print 'Encrypted message received:', cipherText.encode('hex')
+                #decrypt the cipherText
+                plainText = sessionCipher.decrypt(cipherText)
+                print 'Decrypted message:', plainText
+
+            except:
+                print 'Connection closed'
+                self.clientSock.close()
+                return
+
+    def serverSend(self):
+        print "server send"
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                reply = raw_input('Please enter a message to be sent: ')
+                message = sessionCipher.encrypt(reply)
+                print 'Sending encrypted message:', message.encode('hex')
+                self.clientSock.send(message)
+            except:
+                print 'Connection closed'
+                self.clientSock.close()
+                return
+
 
     def serve(self, host, port):
+        print 'starting threading'
+        t3 = threading.Thread(name='serverWait', target=self.serverRecv)
+        t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
         address = (host, port)
         self.sock.bind(address)
         #only 1 listener on socket
@@ -27,7 +65,16 @@ class server(object):
                     #key exchange
                     self.DH(clientsocket)
                     #exchange messages with client
-                    self.talk_to_it(clientsocket)
+                    #self.talk_to_it(clientsocket)
+		    self.clientSock = clientsocket
+		    #print 'starting threading'
+		    #t3 = threading.Thread(name='serverRecv', target=serverRecv)
+        	    #t4 = threading.Thread(name='serverSend', target=serverSend)
+		    print 'readlling strating'
+		    t3.start()
+		    t4.start()
+		    while True:
+			pass
             except KeyboardInterrupt:
                 print 'Exiting'
                 clientsocket.close()
@@ -125,3 +172,35 @@ class server(object):
                 print 'Connection closed'
                 client.close()
                 return
+
+#    def serverRecv(self):
+#	print "server recv"
+#	sessionCipher = AESCipher(str(self.sessionKey))
+#	while True:
+ #           try:
+  #              #get message from client
+   #             print 'Waiting for reply'
+    #            cipherText = self.clientSock.recv(1024).strip()
+     #           print 'Encrypted message received:', cipherText.encode('hex')
+      #          #decrypt the cipherText
+       #         plainText = sessionCipher.decrypt(cipherText)
+        #        print 'Decrypted message:', plainText
+#
+#	    except:
+ #               print 'Connection closed'
+  #              self.clientSock.close()
+   #             return
+
+#    def serverSend(self):
+#	print "server send"
+#	sessionCipher = AESCipher(str(self.sessionKey))
+ #       while True:
+  #          try:
+#		reply = raw_input('Please enter a message to be sent: ')
+ #               message = sessionCipher.encrypt(reply)
+  #              print 'Sending encrypted message:', message.encode('hex')
+   #             self.clientSock.send(message)
+    #        except:
+     #           print 'Connection closed'
+      #          self.clientSock.close()
+       #         return

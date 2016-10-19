@@ -1,6 +1,7 @@
 import click
 import SocketServer
 import sys
+import threading
 from Crypto import Random
 from server import server
 from client import client
@@ -39,9 +40,22 @@ def callClient():
     clientTest.DH()
 
     # Message
-    clientTest.sendMessage()
+    #clientTest.sendMessage()
+    #create new threads
+    t1 = threading.Thread(name='clientSend', target=clientTest.sendMessage)
+    t2 = threading.Thread(name='clientWait', target=clientTest.waitForMessage)
 
-    clientTest.close()
+    t1.setDaemon(True)
+    t2.setDaemon(True)
+	
+    t1.start()
+    print 'starting t2'
+    t2.start()
+
+    while True:
+	pass
+
+    #clientTest.close()
 
 def callServer():
     # Address
