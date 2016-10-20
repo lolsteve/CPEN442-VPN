@@ -28,7 +28,7 @@ class client(object):
             # Connect to server and send data
             self.sock.connect(self.address)
         except:
-            self.sock.close()
+            self.close()
 
 
     # Wait to receive
@@ -37,7 +37,7 @@ class client(object):
         try:
             return self.sock.recv(1024)
         except:
-            self.sock.close()
+            self.close()
 
     #key exchange for client
     def DH(self):
@@ -59,7 +59,7 @@ class client(object):
         #generate cipher for session
         sessionCipher = AESCipher(str(self.sessionKey))
 
-        print 'you can now enter message'
+        print 'VPN Connected'
         while True:
             try:
                 #prompt client for message
@@ -77,13 +77,11 @@ class client(object):
 
             except:
                 print 'Connection closed'
-                self.close()
                 return
 
 
     def waitForMessage(self):
         sessionCipher = AESCipher(str(self.sessionKey))
-        print 'Waiting for message'
         while True:
             try:
                 reply = self.sock.recv(1024).strip()
@@ -97,7 +95,6 @@ class client(object):
                 print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
             except:
                 print 'Connection closed'
-                self.close()
                 return
 
     def mutAuthClient(self, sharedKey):

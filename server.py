@@ -13,7 +13,6 @@ class server(object):
         self.clientSock = ''
 
     def serverRecv(self):
-        print "server now receving messages"
         sessionCipher = AESCipher(str(self.sessionKey))
         while True:
             try:
@@ -28,12 +27,9 @@ class server(object):
                 print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
 
             except:
-                print 'Connection closed'
-                self.clientSock.close()
                 return
 
     def serverSend(self):
-        print "server now sending messages: type message to send"
         sessionCipher = AESCipher(str(self.sessionKey))
         while True:
             try:
@@ -45,16 +41,11 @@ class server(object):
                 self.clientSock.send(message)
                 print '############## MESSAGE SENT ###################\n'
             except:
-                print 'Connection closed'
-                self.clientSock.close()
                 return
 
 
     def serve(self, host, port):
-        print 'starting threading'
         #threads to send and recv at same time
-        t3 = threading.Thread(name='serverWait', target=self.serverRecv)
-        t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
         address = (host, port)
         self.sock.bind(address)
         #only 1 listener on socket
@@ -72,12 +63,14 @@ class server(object):
                     self.DH(clientsocket)
                     #exchange messages with client
                     self.clientSock = clientsocket
-                    print 'threads starting'
+                    print 'VPN Connected'
                     #send and receive
+                    t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
+                    t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
                     t3.start()
                     t4.start()
-                    while True:
-                        pass
+                    t3.join()
+                    t4.join()
             except KeyboardInterrupt:
                 print 'Exiting'
                 clientsocket.close()
