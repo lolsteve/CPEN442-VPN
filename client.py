@@ -86,7 +86,6 @@ class client(object):
 	print 'Waiting for message'
 	while True:
 	    try:
-		#reply = self.waitToRec()
 		reply = self.sock.recv(1024).strip()
 
 		print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
