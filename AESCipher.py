@@ -1,13 +1,16 @@
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC
+from Crypto.Hash import SHA256
 from Crypto import Random
 
 class AESCipher(object):
     def __init__(self, key):
-	if len(key) > 32:
-            self.key = key[:32]
+	if len(key) > 32 or len(key) < 32:
+            sha = SHA256.new()
+            sha.update(key)
+            self.key = sha.digest()
         else:
-            self.key = key.ljust(32, '0')
+            self.key = key
 
     #function to encrypt all messages sent
     # returns iv+E(message)+MAC
