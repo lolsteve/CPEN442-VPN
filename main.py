@@ -53,7 +53,6 @@ def callClient():
     while True:
         pass
 
-    #clientTest.close()
 
 def callServer():
     # Address
