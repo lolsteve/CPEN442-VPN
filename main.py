@@ -40,8 +40,7 @@ def callClient():
     clientTest.DH()
 
     # Message
-    #clientTest.sendMessage()
-    #create new threads
+    # creating new threads
     t1 = threading.Thread(name='clientSend', target=clientTest.sendMessage)
     t2 = threading.Thread(name='clientWait', target=clientTest.waitForMessage)
 
@@ -49,7 +48,6 @@ def callClient():
     t2.setDaemon(True)
 	
     t1.start()
-    print 'starting t2'
     t2.start()
 
     while True:

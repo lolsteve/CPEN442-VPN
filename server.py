@@ -65,12 +65,9 @@ class server(object):
                     #key exchange
                     self.DH(clientsocket)
                     #exchange messages with client
-                    #self.talk_to_it(clientsocket)
 		    self.clientSock = clientsocket
 		    #print 'starting threading'
-		    #t3 = threading.Thread(name='serverRecv', target=serverRecv)
-        	    #t4 = threading.Thread(name='serverSend', target=serverSend)
-		    print 'readlling strating'
+		    print 'threads starting'
 		    t3.start()
 		    t4.start()
 		    while True:
@@ -150,57 +147,4 @@ class server(object):
 
         self.sessionKey = myDH.key
 
-    #send and recieve messages from client
-    def talk_to_it(self, client):
-        #establish cipher used in this session
-        sessionCipher = AESCipher(str(self.sessionKey))
-        while True:
-            try:
-                #get message from client
-                print 'Waiting for reply'
-                cipherText = client.recv(1024).strip()
-                print 'Encrypted message received:', cipherText.encode('hex')
-                #decrypt the cipherText
-                plainText = sessionCipher.decrypt(cipherText)
-                print 'Decrypted message:', plainText
-                #prompt server for message, encrypt and send to client
-                reply = raw_input('Please enter a message to be sent: ')
-                message = sessionCipher.encrypt(reply)
-                print 'Sending encrypted message:', message.encode('hex')
-                client.send(message)
-            except:
-                print 'Connection closed'
-                client.close()
-                return
 
-#    def serverRecv(self):
-#	print "server recv"
-#	sessionCipher = AESCipher(str(self.sessionKey))
-#	while True:
- #           try:
-  #              #get message from client
-   #             print 'Waiting for reply'
-    #            cipherText = self.clientSock.recv(1024).strip()
-     #           print 'Encrypted message received:', cipherText.encode('hex')
-      #          #decrypt the cipherText
-       #         plainText = sessionCipher.decrypt(cipherText)
-        #        print 'Decrypted message:', plainText
-#
-#	    except:
- #               print 'Connection closed'
-  #              self.clientSock.close()
-   #             return
-
-#    def serverSend(self):
-#	print "server send"
-#	sessionCipher = AESCipher(str(self.sessionKey))
- #       while True:
-  #          try:
-#		reply = raw_input('Please enter a message to be sent: ')
- #               message = sessionCipher.encrypt(reply)
-  #              print 'Sending encrypted message:', message.encode('hex')
-   #             self.clientSock.send(message)
-    #        except:
-     #           print 'Connection closed'
-      #          self.clientSock.close()
-       #         return

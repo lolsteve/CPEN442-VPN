@@ -70,15 +70,6 @@ class client(object):
                 #send message to server
                 self.send(cipherText)
 
-#                #wait to hear back from server
-#                print 'Waiting for reply'
- #               reply = self.waitToRec()
-  #              print 'Encrypted message received', reply.encode('hex')
-#
- #               #decrypt message gotten from server
-  #              plainText = sessionCipher.decrypt(reply)
-   #             print 'Decrypted message:', plainText
-#
             except:
                 print 'Connection closed'
                 self.close()
