@@ -13,17 +13,19 @@ class server(object):
 	self.clientSock = ''
 
     def serverRecv(self):
-        print "server recv"
+        print "server now receving messages"
         sessionCipher = AESCipher(str(self.sessionKey))
         while True:
             try:
                 #get message from client
-                print 'Waiting for reply'
                 cipherText = self.clientSock.recv(1024).strip()
+
+		print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
                 print 'Encrypted message received:', cipherText.encode('hex')
                 #decrypt the cipherText
                 plainText = sessionCipher.decrypt(cipherText)
                 print 'Decrypted message:', plainText
+		print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
 
             except:
                 print 'Connection closed'
@@ -31,14 +33,17 @@ class server(object):
                 return
 
     def serverSend(self):
-        print "server send"
+        print "server now sending messages: type message to send"
         sessionCipher = AESCipher(str(self.sessionKey))
         while True:
             try:
-                reply = raw_input('Please enter a message to be sent: ')
+                reply = raw_input('')
                 message = sessionCipher.encrypt(reply)
+
+		print '\n############## NOW SENDING MESSAGE ############'
                 print 'Sending encrypted message:', message.encode('hex')
                 self.clientSock.send(message)
+		print '############## MESSAGE SENT ###################\n'
             except:
                 print 'Connection closed'
                 self.clientSock.close()
@@ -47,6 +52,7 @@ class server(object):
 
     def serve(self, host, port):
         print 'starting threading'
+	#threads to send and recv at same time
         t3 = threading.Thread(name='serverWait', target=self.serverRecv)
         t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
         address = (host, port)
@@ -66,8 +72,8 @@ class server(object):
                     self.DH(clientsocket)
                     #exchange messages with client
 		    self.clientSock = clientsocket
-		    #print 'starting threading'
 		    print 'threads starting'
+		    #send and receive
 		    t3.start()
 		    t4.start()
 		    while True:

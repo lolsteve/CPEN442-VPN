@@ -58,14 +58,19 @@ class client(object):
     def sendMessage(self):
         #generate cipher for session
         sessionCipher = AESCipher(str(self.sessionKey))
-        while True:
+        
+	print 'you can now enter message'
+	while True:
             try:
                 #prompt client for message
-                dataCl = raw_input('Please enter a message to be sent: ')
+                dataCl = raw_input('')
 
                 #encrypt message
                 cipherText = sessionCipher.encrypt(dataCl)
-                print 'Sending encrypted message:', cipherText.encode('hex')
+               
+		print '\n############## NOW SENDING MESSAGE ############'
+		print 'Sending encrypted message:', cipherText.encode('hex')
+		print '############## MESSAGE SENT ###################\n'
 
                 #send message to server
                 self.send(cipherText)
@@ -83,11 +88,14 @@ class client(object):
 	    try:
 		#reply = self.waitToRec()
 		reply = self.sock.recv(1024).strip()
-		print 'Encrypted message received', reply.encode('hex')
+
+		print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+		print 'Encrypted message received: ', reply.encode('hex')
 
 		#decrypt message gotten from server
                 plainText = sessionCipher.decrypt(reply)
                 print 'Decrypted message:', plainText
+		print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
 	    except:
 		print 'Connection closed'
                 self.close()
