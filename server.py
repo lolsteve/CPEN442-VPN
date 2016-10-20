@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import time
 from DiffieHellman import DiffieHellman
 from AESCipher import AESCipher
 from Crypto import Random
@@ -50,6 +51,11 @@ class server(object):
         self.sock.bind(address)
         #only 1 listener on socket
         self.sock.listen(1)
+	t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
+        t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
+        
+
+
         while True:
             try:
                 #get client socket
@@ -65,11 +71,18 @@ class server(object):
                     self.clientSock = clientsocket
                     print 'VPN Connected'
                     #send and receive
-                    t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
-                    t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
+                    #t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
+                    #t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
+
+		    t3.setDaemon(True)
+		    t4.setDaemon(True)
                     t3.start()
                     t4.start()
-                    t3.join()
+                    
+		    while True:
+        		time.sleep(1)
+
+		    t3.join()
                     t4.join()
             except KeyboardInterrupt:
                 print 'Exiting'

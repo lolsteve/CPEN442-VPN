@@ -1,4 +1,5 @@
 import click
+import time
 import SocketServer
 import sys
 import threading
@@ -44,8 +45,15 @@ def callClient():
     t1 = threading.Thread(name='clientSend', target=clientTest.sendMessage)
     t2 = threading.Thread(name='clientWait', target=clientTest.waitForMessage)
 
+    t1.setDaemon(True)
+    t2.setDaemon(True)
+
     t1.start()
     t2.start()
+    
+    while True:
+	time.sleep(1)
+
     t1.join()
     t2.join()
 
