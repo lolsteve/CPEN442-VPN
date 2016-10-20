@@ -4,8 +4,11 @@ from Crypto.Hash import SHA256
 from Crypto import Random
 
 class AESCipher(object):
+
+    # initializes AES cipher with key
+    # if submitted key is longer than 32 bytes, hash with SHA256 and use result
     def __init__(self, key):
-	if len(key) > 32 or len(key) < 32:
+        if len(key) > 32 or len(key) < 32:
             sha = SHA256.new()
             sha.update(key)
             self.key = sha.digest()
