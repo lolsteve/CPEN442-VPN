@@ -58,19 +58,19 @@ class client(object):
     def sendMessage(self):
         #generate cipher for session
         sessionCipher = AESCipher(str(self.sessionKey))
-        
-	print 'you can now enter message'
-	while True:
+
+        print 'you can now enter message'
+        while True:
             try:
                 #prompt client for message
                 dataCl = raw_input('')
 
                 #encrypt message
                 cipherText = sessionCipher.encrypt(dataCl)
-               
-		print '\n############## NOW SENDING MESSAGE ############'
-		print 'Sending encrypted message:', cipherText.encode('hex')
-		print '############## MESSAGE SENT ###################\n'
+
+                print '\n############## NOW SENDING MESSAGE ############'
+                print 'Sending encrypted message:', cipherText.encode('hex')
+                print '############## MESSAGE SENT ###################\n'
 
                 #send message to server
                 self.send(cipherText)
@@ -82,22 +82,22 @@ class client(object):
 
 
     def waitForMessage(self):
-	sessionCipher = AESCipher(str(self.sessionKey))
-	print 'Waiting for message'
-	while True:
-	    try:
-		#reply = self.waitToRec()
-		reply = self.sock.recv(1024).strip()
+        sessionCipher = AESCipher(str(self.sessionKey))
+        print 'Waiting for message'
+        while True:
+            try:
+                #reply = self.waitToRec()
+                reply = self.sock.recv(1024).strip()
 
-		print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
-		print 'Encrypted message received: ', reply.encode('hex')
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print 'Encrypted message received: ', reply.encode('hex')
 
-		#decrypt message gotten from server
+                #decrypt message gotten from server
                 plainText = sessionCipher.decrypt(reply)
                 print 'Decrypted message:', plainText
-		print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
-	    except:
-		print 'Connection closed'
+                print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
+            except:
+                print 'Connection closed'
                 self.close()
                 return
 

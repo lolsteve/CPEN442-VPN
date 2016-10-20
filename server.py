@@ -10,7 +10,7 @@ class server(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sharedKey = ''
-	self.clientSock = ''
+        self.clientSock = ''
 
     def serverRecv(self):
         print "server now receving messages"
@@ -20,12 +20,12 @@ class server(object):
                 #get message from client
                 cipherText = self.clientSock.recv(1024).strip()
 
-		print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
                 print 'Encrypted message received:', cipherText.encode('hex')
                 #decrypt the cipherText
                 plainText = sessionCipher.decrypt(cipherText)
                 print 'Decrypted message:', plainText
-		print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
+                print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
 
             except:
                 print 'Connection closed'
@@ -40,10 +40,10 @@ class server(object):
                 reply = raw_input('')
                 message = sessionCipher.encrypt(reply)
 
-		print '\n############## NOW SENDING MESSAGE ############'
+                print '\n############## NOW SENDING MESSAGE ############'
                 print 'Sending encrypted message:', message.encode('hex')
                 self.clientSock.send(message)
-		print '############## MESSAGE SENT ###################\n'
+                print '############## MESSAGE SENT ###################\n'
             except:
                 print 'Connection closed'
                 self.clientSock.close()
@@ -52,7 +52,7 @@ class server(object):
 
     def serve(self, host, port):
         print 'starting threading'
-	#threads to send and recv at same time
+        #threads to send and recv at same time
         t3 = threading.Thread(name='serverWait', target=self.serverRecv)
         t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
         address = (host, port)
@@ -71,13 +71,13 @@ class server(object):
                     #key exchange
                     self.DH(clientsocket)
                     #exchange messages with client
-		    self.clientSock = clientsocket
-		    print 'threads starting'
-		    #send and receive
-		    t3.start()
-		    t4.start()
-		    while True:
-			pass
+                    self.clientSock = clientsocket
+                    print 'threads starting'
+                    #send and receive
+                    t3.start()
+                    t4.start()
+                    while True:
+                        pass
             except KeyboardInterrupt:
                 print 'Exiting'
                 clientsocket.close()

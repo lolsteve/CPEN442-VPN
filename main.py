@@ -46,12 +46,12 @@ def callClient():
 
     t1.setDaemon(True)
     t2.setDaemon(True)
-	
+
     t1.start()
     t2.start()
 
     while True:
-	pass
+        pass
 
     #clientTest.close()
 
