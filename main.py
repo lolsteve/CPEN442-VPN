@@ -38,7 +38,7 @@ def callClient():
     #mutual authen
     clientTest.mutAuthClient(sharedKey)
     #key excahnge
-    clientTest.DH()
+    clientTest.DH(sharedKey)
 
     # Message
     # creating new threads
