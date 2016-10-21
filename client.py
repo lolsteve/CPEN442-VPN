@@ -49,17 +49,23 @@ class client(object):
         myDiffieHellman = DiffieHellman()
         print 'g^a mod p value is: ', myDiffieHellman.public_key
 
+        print '\n'
+
         #send key to server
         sendDH = cipher.encrypt(str(myDiffieHellman.public_key))
-        print 'Sending encrypted value: ', sendDH 
+        print 'Sending encrypted value: ', sendDH.encode('hex')
         self.send(str(sendDH))
+
+        print '\n'
 
         recvDH = self.waitToRec()
 
         #decrypt received DH value
         reply = cipher.decrypt(recvDH)
-        print 'Received encrypted value: ', recvDH
+        print 'Received encrypted value: ', recvDH.encode('hex')
+        print '\n'
         print 'g^b mod p value is: ', reply
+        print '\n'
 
         #calculate session key
         myDiffieHellman.calc_shared_key(long(reply))

@@ -84,7 +84,7 @@ class server(object):
 
                     t3.join()
                     t4.join()
-                    
+
             except KeyboardInterrupt:
                 print 'Exiting'
                 clientsocket.close()
@@ -151,13 +151,17 @@ class server(object):
         # Decrypt received value from client
         publicVal = cipher.decrypt(recvDH)
 
-        print 'Received encrypted value: ', recvDH
+        print 'Received encrypted value: ', recvDH.encode('hex')
+        print '\n'
         print 'g^a mod p value is: ', publicVal
+        print '\n'
 
         # Encrypt DH's public key AES using shared cipher
         sendDH = cipher.encrypt(str(myDH.public_key))
         print 'g^b mod p value is: ', myDH.public_key
-        print 'Sending encrypted value: ', sendDH
+        print '\n'
+        print 'Sending encrypted value: ', sendDH.encode('hex')
+        print '\n'
 
         # Send computed DH to client
         client.send(str(sendDH))
