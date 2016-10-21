@@ -19,11 +19,11 @@ class server(object):
             try:
                 #get message from client
                 cipherText = self.clientSock.recv(1024).strip()
-
-                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
-                print 'Encrypted message received:', cipherText.encode('hex')
+                
                 #decrypt the cipherText
                 plainText = sessionCipher.decrypt(cipherText)
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print 'Encrypted message received:', cipherText.encode('hex')
                 print 'Decrypted message:', plainText
                 print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
 
@@ -41,8 +41,12 @@ class server(object):
                 print 'Sending encrypted message:', message.encode('hex')
                 self.clientSock.send(message)
                 print '############## MESSAGE SENT ###################\n'
-            except:
-                return
+            except KeyboardInterupt:
+                print 'Exiting'
+                self.clientSock.close()
+                self.sock.close()
+                sys.exit(1)
+                #return
 
 
     def serve(self, host, port):
@@ -70,26 +74,23 @@ class server(object):
                     print 'VPN Connected'
                     #send and receive
                     t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
-                    t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
                     t3.setDaemon(True)
-                    t4.setDaemon(True)
                     t3.start()
-                    t4.start()
-
-                    while True:
-                        time.sleep(1)
+                    
+                    self.serverSend()
 
                     t3.join()
-                    t4.join()
                     
-            except KeyboardInterrupt:
+            #except KeyboardInterrupt:
+            except:
                 print 'Exiting'
                 clientsocket.close()
                 self.sock.close()
                 sys.exit(1)
-            except:
-                print 'Connection closed'
-                clientsocket.close()
+
+            #except:
+             #   print 'Connection closed'
+              #  clientsocket.close()
                 #sys.exit(1)
 
     #set the key for encryption
