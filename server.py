@@ -1,5 +1,7 @@
 import socket
 import sys
+import threading
+import time
 from DiffieHellman import DiffieHellman
 from AESCipher import AESCipher
 from Crypto import Random
@@ -9,12 +11,49 @@ class server(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sharedKey = ''
+        self.clientSock = ''
+
+    def serverRecv(self):
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                #get message from client
+                cipherText = self.clientSock.recv(1024).strip()
+
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print 'Encrypted message received:', cipherText.encode('hex')
+                #decrypt the cipherText
+                plainText = sessionCipher.decrypt(cipherText)
+                print 'Decrypted message:', plainText
+                print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
+
+            except:
+                return
+
+    def serverSend(self):
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                reply = raw_input('')
+                message = sessionCipher.encrypt(reply)
+
+                print '\n############## NOW SENDING MESSAGE ############'
+                print 'Sending encrypted message:', message.encode('hex')
+                self.clientSock.send(message)
+                print '############## MESSAGE SENT ###################\n'
+            except:
+                return
+
 
     def serve(self, host, port):
+        #threads to send and recv at same time
         address = (host, port)
         self.sock.bind(address)
         #only 1 listener on socket
         self.sock.listen(1)
+        
+
+
         while True:
             try:
                 #get client socket
@@ -23,11 +62,29 @@ class server(object):
                 data = clientsocket.recv(1024).strip()
                 #when client is sent start Mut Auth, Key exchange
                 if data[:6] == 'Client':
-                    self.mutualAuth(clientsocket, data)
+                    # Create AES object with shared key
+                    cipher = AESCipher(self.sharedKey)
+
+                    self.mutualAuth(clientsocket, data, cipher)
                     #key exchange
-                    self.DH(clientsocket)
+                    self.DH(clientsocket, cipher)
                     #exchange messages with client
-                    self.talk_to_it(clientsocket)
+                    self.clientSock = clientsocket
+                    print 'VPN Connected'
+                    #send and receive
+                    t3 = threading.Thread(name='serverRecv', target=self.serverRecv)
+                    t4 = threading.Thread(name='serverSendMessage', target=self.serverSend)
+                    t3.setDaemon(True)
+                    t4.setDaemon(True)
+                    t3.start()
+                    t4.start()
+
+                    while True:
+                        time.sleep(1)
+
+                    t3.join()
+                    t4.join()
+
             except KeyboardInterrupt:
                 print 'Exiting'
                 clientsocket.close()
@@ -43,15 +100,12 @@ class server(object):
         self.sharedKey = sharedKey
 
     #mutual Auth
-    def mutualAuth(self, client, message):
+    def mutualAuth(self, client, message, cipher):
         try:
             # Receive request for authentication from client
             print 'Received:', message.encode('hex')
             Ra = message[-16:]
             print 'Ra:', Ra.encode('hex')
-
-            # Create AES object with shared key
-            cipher = AESCipher(self.sharedKey)
 
             # Server's challenge to client
             Rb = Random.new().read(16)
@@ -86,15 +140,31 @@ class server(object):
             client.close()
 
     #server key exchange
-    def DH(self, client):
+    def DH(self, client, cipher):
+        print '\n############### STARTING D-H ##################'
+
         myDH = DiffieHellman()
 
         # Receive value from client
-        publicVal = client.recv(1024).strip()
-        print 'Received g^a mod p:', publicVal
-        print 'Sending g^b mod p:', str(myDH.public_key)
+        recvDH = client.recv(1024).strip()
+
+        # Decrypt received value from client
+        publicVal = cipher.decrypt(recvDH)
+
+        print 'Received encrypted value: ', recvDH.encode('hex')
+        print '\n'
+        print 'g^a mod p value is: ', publicVal
+        print '\n'
+
+        # Encrypt DH's public key AES using shared cipher
+        sendDH = cipher.encrypt(str(myDH.public_key))
+        print 'g^b mod p value is: ', myDH.public_key
+        print '\n'
+        print 'Sending encrypted value: ', sendDH.encode('hex')
+        print '\n'
+
         # Send computed DH to client
-        client.send(str(myDH.public_key))
+        client.send(str(sendDH))
 
         # Compute shared key
         myDH.calc_shared_key(long(publicVal))
@@ -103,25 +173,6 @@ class server(object):
 
         self.sessionKey = myDH.key
 
-    #send and recieve messages from client
-    def talk_to_it(self, client):
-        #establish cipher used in this session
-        sessionCipher = AESCipher(str(self.sessionKey))
-        while True:
-            try:
-                #get message from client
-                print 'Waiting for reply'
-                cipherText = client.recv(1024).strip()
-                print 'Encrypted message received:', cipherText.encode('hex')
-                #decrypt the cipherText
-                plainText = sessionCipher.decrypt(cipherText)
-                print 'Decrypted message:', plainText
-                #prompt server for message, encrypt and send to client
-                reply = raw_input('Please enter a message to be sent: ')
-                message = sessionCipher.encrypt(reply)
-                print 'Sending encrypted message:', message.encode('hex')
-                client.send(message)
-            except:
-                print 'Connection closed'
-                client.close()
-                return
+        print '################## D-H OVER ###################\n'
+
+

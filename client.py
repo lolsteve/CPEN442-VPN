@@ -28,7 +28,7 @@ class client(object):
             # Connect to server and send data
             self.sock.connect(self.address)
         except:
-            self.sock.close()
+            self.close()
 
 
     # Wait to receive
@@ -37,52 +37,84 @@ class client(object):
         try:
             return self.sock.recv(1024)
         except:
-            self.sock.close()
+            self.close()
 
     #key exchange for client
-    def DH(self):
+    def DH(self, sharedKey):
+        print '\n############### STARTING D-H ##################'
+        # Create AES object with shared key
+        cipher = AESCipher(sharedKey)
+
         #generate key to send to server
         myDiffieHellman = DiffieHellman()
-        print 'Sending g^a mod p:', myDiffieHellman.public_key
+        print 'g^a mod p value is: ', myDiffieHellman.public_key
+
+        print '\n'
 
         #send key to server
-        self.send(str(myDiffieHellman.public_key))
-        reply = self.waitToRec()
-        print 'Received g^b mod p:', reply
+        sendDH = cipher.encrypt(str(myDiffieHellman.public_key))
+        print 'Sending encrypted value: ', sendDH.encode('hex')
+        self.send(str(sendDH))
+
+        print '\n'
+
+        recvDH = self.waitToRec()
+
+        #decrypt received DH value
+        reply = cipher.decrypt(recvDH)
+        print 'Received encrypted value: ', recvDH.encode('hex')
+        print '\n'
+        print 'g^b mod p value is: ', reply
+        print '\n'
 
         #calculate session key
         myDiffieHellman.calc_shared_key(long(reply))
         print "Calculated session key:", myDiffieHellman.key
         self.sessionKey = myDiffieHellman.key
 
+        print '################## D-H OVER ###################\n'
+
     def sendMessage(self):
         #generate cipher for session
         sessionCipher = AESCipher(str(self.sessionKey))
+
+        print 'VPN Connected'
         while True:
             try:
                 #prompt client for message
-                dataCl = raw_input('Please enter a message to be sent: ')
+                dataCl = raw_input('')
 
                 #encrypt message
                 cipherText = sessionCipher.encrypt(dataCl)
+
+                print '\n############## NOW SENDING MESSAGE ############'
                 print 'Sending encrypted message:', cipherText.encode('hex')
+                print '############## MESSAGE SENT ###################\n'
 
                 #send message to server
                 self.send(cipherText)
 
-                #wait to hear back from server
-                print 'Waiting for reply'
-                reply = self.waitToRec()
-                print 'Encrypted message received', reply.encode('hex')
+            except:
+                print 'Connection closed'
+                return
+
+
+    def waitForMessage(self):
+        sessionCipher = AESCipher(str(self.sessionKey))
+        while True:
+            try:
+                reply = self.sock.recv(1024).strip()
+
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print 'Encrypted message received: ', reply.encode('hex')
 
                 #decrypt message gotten from server
                 plainText = sessionCipher.decrypt(reply)
                 print 'Decrypted message:', plainText
+                print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
             except:
                 print 'Connection closed'
-                self.close()
                 return
-
 
     def mutAuthClient(self, sharedKey):
         try:

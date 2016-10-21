@@ -1,6 +1,8 @@
 import click
+import time
 import SocketServer
 import sys
+import threading
 from Crypto import Random
 from server import server
 from client import client
@@ -36,10 +38,24 @@ def callClient():
     #mutual authen
     clientTest.mutAuthClient(sharedKey)
     #key excahnge
-    clientTest.DH()
+    clientTest.DH(sharedKey)
 
     # Message
-    clientTest.sendMessage()
+    # creating new threads
+    t1 = threading.Thread(name='clientSend', target=clientTest.sendMessage)
+    t2 = threading.Thread(name='clientWait', target=clientTest.waitForMessage)
+
+    t1.setDaemon(True)
+    t2.setDaemon(True)
+
+    t1.start()
+    t2.start()
+    
+    while True:
+    	time.sleep(1)
+
+    t1.join()
+    t2.join()
 
     clientTest.close()
 
