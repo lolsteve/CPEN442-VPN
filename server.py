@@ -62,9 +62,12 @@ class server(object):
                 data = clientsocket.recv(1024).strip()
                 #when client is sent start Mut Auth, Key exchange
                 if data[:6] == 'Client':
-                    self.mutualAuth(clientsocket, data)
+                    # Create AES object with shared key
+                    cipher = AESCipher(self.sharedKey)
+
+                    self.mutualAuth(clientsocket, data, cipher)
                     #key exchange
-                    self.DH(clientsocket)
+                    self.DH(clientsocket, cipher)
                     #exchange messages with client
                     self.clientSock = clientsocket
                     print 'VPN Connected'
@@ -97,15 +100,12 @@ class server(object):
         self.sharedKey = sharedKey
 
     #mutual Auth
-    def mutualAuth(self, client, message):
+    def mutualAuth(self, client, message, cipher):
         try:
             # Receive request for authentication from client
             print 'Received:', message.encode('hex')
             Ra = message[-16:]
             print 'Ra:', Ra.encode('hex')
-
-            # Create AES object with shared key
-            cipher = AESCipher(self.sharedKey)
 
             # Server's challenge to client
             Rb = Random.new().read(16)
@@ -140,15 +140,27 @@ class server(object):
             client.close()
 
     #server key exchange
-    def DH(self, client):
+    def DH(self, client, cipher):
+        print '\n############### STARTING D-H ##################'
+
         myDH = DiffieHellman()
 
         # Receive value from client
-        publicVal = client.recv(1024).strip()
-        print 'Received g^a mod p:', publicVal
-        print 'Sending g^b mod p:', str(myDH.public_key)
+        recvDH = client.recv(1024).strip()
+
+        # Decrypt received value from client
+        publicVal = cipher.decrypt(recvDH)
+
+        print 'Received encrypted value: ', recvDH
+        print 'g^a mod p value is: ', publicVal
+
+        # Encrypt DH's public key AES using shared cipher
+        sendDH = cipher.encrypt(str(myDH.public_key))
+        print 'g^b mod p value is: ', myDH.public_key
+        print 'Sending encrypted value: ', sendDH
+
         # Send computed DH to client
-        client.send(str(myDH.public_key))
+        client.send(str(sendDH))
 
         # Compute shared key
         myDH.calc_shared_key(long(publicVal))
@@ -156,5 +168,7 @@ class server(object):
         print 'Calculated session key:', myDH.key
 
         self.sessionKey = myDH.key
+
+        print '################## D-H OVER ###################\n'
 
 

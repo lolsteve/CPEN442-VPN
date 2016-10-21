@@ -40,20 +40,33 @@ class client(object):
             self.close()
 
     #key exchange for client
-    def DH(self):
+    def DH(self, sharedKey):
+        print '\n############### STARTING D-H ##################'
+        # Create AES object with shared key
+        cipher = AESCipher(sharedKey)
+
         #generate key to send to server
         myDiffieHellman = DiffieHellman()
-        print 'Sending g^a mod p:', myDiffieHellman.public_key
+        print 'g^a mod p value is: ', myDiffieHellman.public_key
 
         #send key to server
-        self.send(str(myDiffieHellman.public_key))
-        reply = self.waitToRec()
-        print 'Received g^b mod p:', reply
+        sendDH = cipher.encrypt(str(myDiffieHellman.public_key))
+        print 'Sending encrypted value: ', sendDH 
+        self.send(str(sendDH))
+
+        recvDH = self.waitToRec()
+
+        #decrypt received DH value
+        reply = cipher.decrypt(recvDH)
+        print 'Received encrypted value: ', recvDH
+        print 'g^b mod p value is: ', reply
 
         #calculate session key
         myDiffieHellman.calc_shared_key(long(reply))
         print "Calculated session key:", myDiffieHellman.key
         self.sessionKey = myDiffieHellman.key
+
+        print '################## D-H OVER ###################\n'
 
     def sendMessage(self):
         #generate cipher for session
