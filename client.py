@@ -95,8 +95,10 @@ class client(object):
                 self.send(cipherText)
 
             except:
-                print 'Connection closed'
-                return
+                print 'Exiting'
+                self.close()
+                sys.exit(1)
+                #return
 
 
     def waitForMessage(self):
@@ -105,11 +107,10 @@ class client(object):
             try:
                 reply = self.sock.recv(1024).strip()
 
-                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
-                print 'Encrypted message received: ', reply.encode('hex')
-
                 #decrypt message gotten from server
                 plainText = sessionCipher.decrypt(reply)
+                print '\n$$$$$$$$$$$$$$ RECIEVING MESSAGE $$$$$$$$$$$$$$'
+                print 'Encrypted message received: ', reply.encode('hex')
                 print 'Decrypted message:', plainText
                 print '$$$$$$$$$$$$$$ END OF MESSAGE $$$$$$$$$$$$$$$$$\n'
             except:
